@@ -20,7 +20,6 @@ def read_faces(path=path):
     for file in files:
         classNames.append(os.path.splitext(file)[0])
         curImg = face_recognition.load_image_file(f'{path}/{file}')
-        # curImg = curImg.astype('uint8')
 
         encode = face_recognition.face_encodings(curImg)[0]
         encodeList.append(encode)
@@ -34,14 +33,14 @@ cap = cv2.VideoCapture(0)
 
 while True:
     success, img = cap.read()
-    # imgS = cv2.resize(img, (0, 0), None, 0.25, 0.25)
-    imgS = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    imgS = cv2.resize(img, (0, 0), None, 0.25, 0.25)
+    imgS = cv2.cvtColor(imgS, cv2.COLOR_BGR2RGB)
 
-    facesCurFrame = face_recognition.face_locations(imgS)
-    encodesCurFrame = face_recognition.face_encodings(imgS, facesCurFrame)
+    facesCurFrame = face_recognition.face_locations(imgS, number_of_times_to_upsample=8)
+    encodesCurFrame = face_recognition.face_encodings(imgS, facesCurFrame, num_jitters=1, model='large')
 
     for encodeFace, faceLoc in zip(encodesCurFrame, facesCurFrame):
-        matches = face_recognition.compare_faces(encodeListKnown, encodeFace)
+        matches = face_recognition.compare_faces(encodeListKnown, encodeFace, 0.50)
         faceDis = face_recognition.face_distance(encodeListKnown, encodeFace)
         matchIndex = np.argmin(faceDis)
 
@@ -60,4 +59,5 @@ while True:
             cv2.putText(img, 'unknown', (x1 + 6, y2 - 6), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 2)
 
     cv2.imshow('Webcam', img)
-    cv2.waitKey(1)
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
